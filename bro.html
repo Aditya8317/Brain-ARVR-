@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brain Tumor Surgery Simulation (AR Mode)</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: "Segoe UI", Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    model-viewer {
+      width: 100vw;
+      height: 100vh;
+      --poster-color: transparent;
+    }
+
+    .ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .instructions {
+      position: absolute;
+      top: 10%;
+      width: 100%;
+      text-align: center;
+      font-size: 1.3rem;
+      pointer-events: none;
+      text-shadow: 0 0 8px #000;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .progress-bar {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 8px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: limegreen;
+      transition: width 1s ease;
+    }
+
+    .ar-button {
+      position: absolute;
+      bottom: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 3D Brain Model Viewer -->
+  <model-viewer id="brainModel"
+    src="brain.glb"
+    alt="3D Brain Tumor Surgery Model"
+    ar
+    ar-scale="fixed" 
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    environment-image="neutral"
+    exposure="1.2"
+    shadow-intensity="1"
+    auto-rotate
+    disable-zoom>
+  </model-viewer>
+
+  <!-- AR Launch Button -->
+  <button class="ar-button" id="enterAR">View in AR 👁️</button>
+
+  <div class="ui-overlay">
+    <div class="instructions" id="instruction">Step 1: Locating Tumor Region...</div>
+    <div class="progress-bar"><div class="progress" id="progress"></div></div>
+    <div class="controls">
+      <button onclick="prevStep()">◀ Previous</button>
+      <button onclick="nextStep()">Next ▶</button>
+      <button onclick="restart()">🔁 Restart</button>
+    </div>
+  </div>
+
+  <script>
+    const steps = [
+      { text: "Step 1: Locating Tumor Region...", orbit: "0deg 75deg auto", progress: 10, voice: "Locating the tumor in the frontal lobe." },
+      { text: "Step 2: Marking incision area...", orbit: "30deg 75deg auto", progress: 30, voice: "Marking the incision area for removal." },
+      { text: "Step 3: Surgical exposure initiated...", orbit: "60deg 65deg auto", progress: 50, voice: "Surgical exposure is initiated carefully." },
+      { text: "Step 4: Tumor removal in progress...", orbit: "90deg 65deg auto", progress: 70, voice: "Tumor tissue is being excised precisely." },
+      { text: "Step 5: Sealing and closure...", orbit: "120deg 75deg auto", progress: 90, voice: "Sealing the area and closing the incision." },
+      { text: "Procedure complete! ✅", orbit: "0deg 75deg auto", progress: 100, voice: "The surgery simulation is complete. Tumor successfully removed." }
+    ];
+
+    let currentStep = 0;
+    const model = document.getElementById("brainModel");
+    const instruction = document.getElementById("instruction");
+    const progress = document.getElementById("progress");
+
+    // Speak step using Text-to-Speech
+    function narrate(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-IN';
+      utter.rate = 1;
+      utter.pitch = 1;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utter);
+    }
+
+    function showStep() {
+      const step = steps[currentStep];
+      instruction.textContent = step.text;
+      progress.style.width = step.progress + "%";
+      model.cameraOrbit = step.orbit;
+      narrate(step.voice);
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        showStep();
+      }
+    }
+
+    function restart() {
+      currentStep = 0;
+      showStep();
+    }
+
+    // Auto start
+    window.onload = () => showStep();
+
+    // Enter AR mode when button clicked
+    const enterARBtn = document.getElementById("enterAR");
+    enterARBtn.addEventListener("click", () => {
+      model.activateAR();
+    });
+  </script>
+
+</body>
+</html>
